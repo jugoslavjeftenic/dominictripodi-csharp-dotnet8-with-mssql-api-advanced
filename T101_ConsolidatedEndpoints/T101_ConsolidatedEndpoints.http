@@ -1,0 +1,6 @@
+@T101_ConsolidatedEndpoints_HostAddress = http://localhost:5293
+
+GET {{T101_ConsolidatedEndpoints_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
