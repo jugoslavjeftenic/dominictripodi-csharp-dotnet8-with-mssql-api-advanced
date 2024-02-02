@@ -15,8 +15,6 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 		private readonly DataContextDapper _dapper = new(config);
 
-		// UserModel -------------------------------------------
-
 		// Get
 		[HttpGet("{userId}/{isActive}")]
 		public IEnumerable<UserComplete> GetUser(int userId, bool isActive)
@@ -63,7 +61,21 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				return Ok();
 			}
 
-			return StatusCode(400, "Failed to Update User.");
+			return StatusCode(400, "Failed to Upsert User.");
+		}
+
+		// Delete
+		[HttpDelete("{userId}")]
+		public IActionResult DeleteUser(int userId)
+		{
+			string sql = $"TutorialAppSchema.spUser_Delete @UserId={userId}";
+
+			if (_dapper.ExecuteSql(sql))
+			{
+				return Ok();
+			}
+
+			return StatusCode(400, "Failed to Delete User.");
 		}
 	}
 }
