@@ -79,13 +79,13 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		}
 
 		// Delete
-		[HttpDelete("DeletePost/{postId}")]
-		public IActionResult DeleteUser(int postId)
+		[HttpDelete("{postId}")]
+		public IActionResult DeletePost(int postId)
 		{
 			string sql = @$"
-			DELETE
-			FROM [TutorialAppSchema].[Posts]
-			WHERE [PostId] = {postId} AND UserId = {User.FindFirst("userId")?.Value}
+			EXEC TutorialAppSchema.spPost_Delete
+				@PostId = {postId},
+				@UserId = {User.FindFirst("userId")?.Value}
 			";
 
 			if (_dapper.ExecuteSql(sql))
@@ -93,7 +93,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				return Ok();
 			}
 
-			throw new Exception("Failed to Delete Post");
+			return StatusCode(400, "Failed to Delete Post.");
 		}
 	}
 }
