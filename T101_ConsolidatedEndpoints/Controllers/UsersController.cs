@@ -6,6 +6,7 @@ using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers
 {
+	//[Authorize]
 	[ApiController]
 	[Route("[controller]")]
 	public class UsersController(IConfiguration config) : ControllerBase
@@ -136,8 +137,8 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				[AvgSalary]
 			) VALUES (
 				'{userSalary.UserId}',
-				'{userSalary.Salary?.ToString(_specifier, _culture)}',
-				'{userSalary.AvgSalary?.ToString(_specifier, _culture)}'
+				'{userSalary.Salary.ToString(_specifier, _culture)}',
+				'{userSalary.AvgSalary.ToString(_specifier, _culture)}'
 			)";
 
 			if (_dapper.ExecuteSql(sql))
@@ -172,8 +173,8 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		{
 			string sql = @$"
 			UPDATE [TutorialAppSchema].[UserSalary] SET
-				[Salary] = '{userSalary.Salary?.ToString(_specifier, _culture)}',
-				[AvgSalary] = '{userSalary.AvgSalary?.ToString(_specifier, _culture)}'
+				[Salary] = '{userSalary.Salary.ToString(_specifier, _culture)}',
+				[AvgSalary] = '{userSalary.AvgSalary.ToString(_specifier, _culture)}'
 			WHERE UserId = {userSalary.UserId}
 			";
 
