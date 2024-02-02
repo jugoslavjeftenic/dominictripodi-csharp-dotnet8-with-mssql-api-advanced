@@ -68,7 +68,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		[HttpDelete("{userId}")]
 		public IActionResult DeleteUser(int userId)
 		{
-			string sql = $"TutorialAppSchema.spUser_Delete @UserId={userId}";
+			string sql = $"EXEC TutorialAppSchema.spUser_Delete @UserId={userId}";
 
 			if (_dapper.ExecuteSql(sql))
 			{
