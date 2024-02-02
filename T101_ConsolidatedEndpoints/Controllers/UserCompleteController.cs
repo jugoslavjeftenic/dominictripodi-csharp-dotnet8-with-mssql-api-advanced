@@ -17,9 +17,9 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 		// UserModel -------------------------------------------
 
-		// Read
+		// Get
 		[HttpGet("{userId}/{isActive}")]
-		public IEnumerable<UserComplete> GetUsersByParam(int userId, bool isActive)
+		public IEnumerable<UserComplete> GetUser(int userId, bool isActive)
 		{
 			string sql = "EXEC TutorialAppSchema.spUsers_Get";
 			string parameters = "";
@@ -39,6 +39,31 @@ namespace T101_ConsolidatedEndpoints.Controllers
 			IEnumerable<UserComplete> users = _dapper.LoadData<UserComplete>(sql);
 
 			return users;
+		}
+
+		// Upsert
+		[HttpPut]
+		public IActionResult UpsertUser(UserComplete userComplete)
+		{
+			string sql = @$"
+			EXEC TutorialAppSchema.spUser_Upsert
+				@FirstName = '{userComplete.FirstName}',
+				@LastName = '{userComplete.LastName}',
+				@Email = '{userComplete.Email}',
+				@Gender = '{userComplete.Gender}',
+				@Active = '{userComplete.Active}',
+				@JobTitle = '{userComplete.JobTitle}',
+				@Department = '{userComplete.Department}',
+				@Salary = '{userComplete.Salary.ToString(_specifier, _culture)}',
+				@UserId = {userComplete.UserId}
+			";
+
+			if (_dapper.ExecuteSql(sql))
+			{
+				return Ok();
+			}
+
+			return StatusCode(400, "Failed to Update User.");
 		}
 	}
 }
