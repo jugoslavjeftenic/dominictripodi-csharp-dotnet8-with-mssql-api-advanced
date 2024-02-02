@@ -12,6 +12,37 @@ namespace T101_ConsolidatedEndpoints.Controllers
 	{
 		private readonly DataContextDapper _dapper = new(config);
 
+		// Get
+		[HttpGet("{postId}/{userId}/{searchParam}")]
+		public IEnumerable<PostModel> GetPost(int postId, int userId, string searchParam = "none")
+		{
+			string sql = "EXEC TutorialAppSchema.spPosts_Get";
+			string parameters = "";
+
+			if (postId != 0)
+			{
+				parameters += $", @PostId={postId}";
+			}
+
+			if (userId != 0)
+			{
+				parameters += $", @UserId={userId}";
+			}
+
+			if (searchParam != "none")
+			{
+				parameters += $", @SearchValue='{searchParam}'";
+			}
+
+			if (parameters.Length > 0)
+			{
+				sql += parameters[1..];
+			}
+
+			return _dapper.LoadData<PostModel>(sql);
+		}
+
+
 		// PostModel -------------------------------------------
 		// Create
 		[HttpPost("AddPost")]
@@ -40,62 +71,6 @@ namespace T101_ConsolidatedEndpoints.Controllers
 			throw new Exception("Failed to Add Post");
 		}
 
-		// Read - all
-		[HttpGet("GetPosts")]
-		public IEnumerable<PostModel> GetPosts()
-		{
-			string sql = @"
-			SELECT
-				[PostId],
-				[UserId],
-				[PostTitle],
-				[PostContent],
-				[PostCreated],
-				[PostUpdated]
-			FROM [TutorialAppSchema].[Posts]
-			";
-
-			return _dapper.LoadData<PostModel>(sql);
-		}
-
-		// Read - byPostId
-		[HttpGet("GetPost/{postId}")]
-		public PostModel GetPost(int postId)
-		{
-			string sql = @$"
-			SELECT
-				[PostId],
-				[UserId],
-				[PostTitle],
-				[PostContent],
-				[PostCreated],
-				[PostUpdated]
-			FROM [TutorialAppSchema].[Posts]
-			WHERE [PostId] = {postId}
-			";
-
-			return _dapper.LoadDataSingle<PostModel>(sql);
-		}
-
-		// Read - byUserId
-		[HttpGet("GetPostsByUser/{userId}")]
-		public IEnumerable<PostModel> GetPostsByUser(int userId)
-		{
-			string sql = @$"
-			SELECT
-				[PostId],
-				[UserId],
-				[PostTitle],
-				[PostContent],
-				[PostCreated],
-				[PostUpdated]
-			FROM [TutorialAppSchema].[Posts]
-			WHERE [UserId] = {userId}
-			";
-
-			return _dapper.LoadData<PostModel>(sql);
-		}
-
 		// Read - byMyUserId
 		[HttpGet("GetPostsByMyUser")]
 		public IEnumerable<PostModel> GetPostsByMyUser()
@@ -110,25 +85,6 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				[PostUpdated]
 			FROM [TutorialAppSchema].[Posts]
 			WHERE [UserId] = {User.FindFirst("userId")?.Value}
-			";
-
-			return _dapper.LoadData<PostModel>(sql);
-		}
-
-		// Read - bySearch
-		[HttpGet("GetPostsBySearch/{searchParam}")]
-		public IEnumerable<PostModel> GetPostsBySearch(string searchParam)
-		{
-			string sql = @$"
-			SELECT
-				[PostId],
-				[UserId],
-				[PostTitle],
-				[PostContent],
-				[PostCreated],
-				[PostUpdated]
-			FROM [TutorialAppSchema].[Posts]
-			WHERE [PostTitle] LIKE '%{searchParam}%' OR [PostContent] LIKE '%{searchParam}%'
 			";
 
 			return _dapper.LoadData<PostModel>(sql);
