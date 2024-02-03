@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Globalization;
 using System.Security.Cryptography;
 using T101_ConsolidatedEndpoints.Data;
 using T101_ConsolidatedEndpoints.Dtos;
 using T101_ConsolidatedEndpoints.Helpers;
+using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers
 {
@@ -40,63 +42,65 @@ namespace T101_ConsolidatedEndpoints.Controllers
 					byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
 
 					string sqlAddAuth = @$"
-					INSERT INTO TutorialAppSchema.Auth (
-						[Email], 
-						[PasswordHash], 
-						[PasswordSalt]
-					) VALUES (
-						'{userForRegistration.Email}', 
-						@PasswordHash, 
-						@PasswordSalt
-					)";
+					EXEC TutorialAppSchema.spRegistration_Upsert
+						@Email = @EmailParam, 
+						@PasswordHash = @PasswordHashParam, 
+						@PasswordSalt = @PasswordSaltParam
+					";
 
 					List<SqlParameter> sqlParameters = [];
 
-					SqlParameter passwordSaltParameter = new("@PasswordSalt", SqlDbType.VarBinary)
+					SqlParameter emailParameter = new("@EmailParam", SqlDbType.VarChar)
 					{
-						Value = passwordSalt
+						Value = userForRegistration.Email
 					};
 
-					SqlParameter passwordHashParameter = new("@PasswordHash", SqlDbType.VarBinary)
+					SqlParameter passwordHashParameter = new("@PasswordHashParam", SqlDbType.VarBinary)
 					{
 						Value = passwordHash
 					};
 
-					sqlParameters.Add(passwordSaltParameter);
+					SqlParameter passwordSaltParameter = new("@PasswordSaltParam", SqlDbType.VarBinary)
+					{
+						Value = passwordSalt
+					};
+
+					sqlParameters.Add(emailParameter);
 					sqlParameters.Add(passwordHashParameter);
+					sqlParameters.Add(passwordSaltParameter);
 
 					if (_dapper.ExecuteSqlWithParameters(sqlAddAuth, sqlParameters))
 					{
+						string _specifier = "0.00";
+						CultureInfo _culture = CultureInfo.InvariantCulture;
+
 						string sqlAddUser = @$"
-						INSERT INTO [TutorialAppSchema].[Users] (
-							[FirstName],
-							[LastName],
-							[Email],
-							[Gender],
-							[Active]
-						) VALUES (
-							'{userForRegistration.FirstName}',
-							'{userForRegistration.LastName}',
-							'{userForRegistration.Email}',
-							'{userForRegistration.Gender}',
-							'1'
-						)";
+						EXEC TutorialAppSchema.spUser_Upsert
+							@FirstName = '{userForRegistration.FirstName}',
+							@LastName = '{userForRegistration.LastName}',
+							@Email = '{userForRegistration.Email}',
+							@Gender = '{userForRegistration.Gender}',
+							@Active = 1,
+							@JobTitle = '{userForRegistration.JobTitle}',
+							@Department = '{userForRegistration.Department}',
+							@Salary = {userForRegistration.Salary.ToString(_specifier, _culture)}
+						";
 
 						if (_dapper.ExecuteSql(sqlAddUser))
 						{
 							return Ok();
 						}
 
-						throw new Exception("Failed to add user.");
+						return StatusCode(400, "Failed to add User.");
 					}
 
-					throw new Exception("Failed to register user.");
+					return StatusCode(400, "Failed to register User.");
 				}
 
-				throw new Exception("User with this email already exists!");
+				return StatusCode(400, "User with this email already exists!");
 			}
 
-			throw new Exception("Passwords do not match!");
+			return StatusCode(400, "Passwords do not match!");
 		}
 
 		[AllowAnonymous]
