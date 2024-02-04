@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+﻿using Dapper;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.IdentityModel.Tokens;
@@ -73,26 +74,10 @@ namespace T101_ConsolidatedEndpoints.Helpers
 						@PasswordSalt = @PasswordSaltParam
 					";
 
-			List<SqlParameter> sqlParameters = [];
-
-			SqlParameter emailParameter = new("@EmailParam", SqlDbType.VarChar)
-			{
-				Value = userForSetPassword.Email
-			};
-
-			SqlParameter passwordHashParameter = new("@PasswordHashParam", SqlDbType.VarBinary)
-			{
-				Value = passwordHash
-			};
-
-			SqlParameter passwordSaltParameter = new("@PasswordSaltParam", SqlDbType.VarBinary)
-			{
-				Value = passwordSalt
-			};
-
-			sqlParameters.Add(emailParameter);
-			sqlParameters.Add(passwordHashParameter);
-			sqlParameters.Add(passwordSaltParameter);
+			DynamicParameters sqlParameters = new();
+			sqlParameters.Add("@EmailParam", userForSetPassword.Email, DbType.String);
+			sqlParameters.Add("@PasswordHashParam", passwordHash, DbType.Binary);
+			sqlParameters.Add("@PasswordSaltParam", passwordSalt, DbType.Binary);
 
 			return _dapper.ExecuteSqlWithParameters(sqlAddAuth, sqlParameters);
 		}
