@@ -1,13 +1,20 @@
 ﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using T101_ConsolidatedEndpoints.Data;
+using T101_ConsolidatedEndpoints.Dtos;
 
 namespace T101_ConsolidatedEndpoints.Helpers
 {
 	public class AuthHelper(IConfiguration config)
 	{
+		private readonly DataContextDapper _dapper = new(config);
 		private readonly IConfiguration _config = config;
 
 		public byte[] GetPasswordHash(string password, byte[] passwordSalt)
@@ -46,6 +53,48 @@ namespace T101_ConsolidatedEndpoints.Helpers
 			SecurityToken token = tokenHandler.CreateToken(descriptor);
 
 			return tokenHandler.WriteToken(token);
+		}
+
+		public bool SetPassword(UserForLoginDto userForSetPassword)
+		{
+			byte[] passwordSalt = [128 / 8];
+
+			using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+			{
+				rng.GetNonZeroBytes(passwordSalt);
+			}
+
+			byte[] passwordHash = GetPasswordHash(userForSetPassword.Password, passwordSalt);
+
+			string sqlAddAuth = @$"
+					EXEC TutorialAppSchema.spRegistration_Upsert
+						@Email = @EmailParam, 
+						@PasswordHash = @PasswordHashParam, 
+						@PasswordSalt = @PasswordSaltParam
+					";
+
+			List<SqlParameter> sqlParameters = [];
+
+			SqlParameter emailParameter = new("@EmailParam", SqlDbType.VarChar)
+			{
+				Value = userForSetPassword.Email
+			};
+
+			SqlParameter passwordHashParameter = new("@PasswordHashParam", SqlDbType.VarBinary)
+			{
+				Value = passwordHash
+			};
+
+			SqlParameter passwordSaltParameter = new("@PasswordSaltParam", SqlDbType.VarBinary)
+			{
+				Value = passwordSalt
+			};
+
+			sqlParameters.Add(emailParameter);
+			sqlParameters.Add(passwordHashParameter);
+			sqlParameters.Add(passwordSaltParameter);
+
+			return _dapper.ExecuteSqlWithParameters(sqlAddAuth, sqlParameters);
 		}
 	}
 }

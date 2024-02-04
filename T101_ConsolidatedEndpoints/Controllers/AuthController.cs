@@ -32,44 +32,13 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 				if (!existingUsers.Any())
 				{
-					byte[] passwordSalt = [128 / 8];
-
-					using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+					UserForLoginDto userForSetPassword = new()
 					{
-						rng.GetNonZeroBytes(passwordSalt);
-					}
-
-					byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
-
-					string sqlAddAuth = @$"
-					EXEC TutorialAppSchema.spRegistration_Upsert
-						@Email = @EmailParam, 
-						@PasswordHash = @PasswordHashParam, 
-						@PasswordSalt = @PasswordSaltParam
-					";
-
-					List<SqlParameter> sqlParameters = [];
-
-					SqlParameter emailParameter = new("@EmailParam", SqlDbType.VarChar)
-					{
-						Value = userForRegistration.Email
+						Email = userForRegistration.Email,
+						Password = userForRegistration.Password
 					};
 
-					SqlParameter passwordHashParameter = new("@PasswordHashParam", SqlDbType.VarBinary)
-					{
-						Value = passwordHash
-					};
-
-					SqlParameter passwordSaltParameter = new("@PasswordSaltParam", SqlDbType.VarBinary)
-					{
-						Value = passwordSalt
-					};
-
-					sqlParameters.Add(emailParameter);
-					sqlParameters.Add(passwordHashParameter);
-					sqlParameters.Add(passwordSaltParameter);
-
-					if (_dapper.ExecuteSqlWithParameters(sqlAddAuth, sqlParameters))
+					if (_authHelper.SetPassword(userForSetPassword))
 					{
 						string _specifier = "0.00";
 						CultureInfo _culture = CultureInfo.InvariantCulture;
@@ -101,6 +70,17 @@ namespace T101_ConsolidatedEndpoints.Controllers
 			}
 
 			return StatusCode(400, "Passwords do not match!");
+		}
+
+		[HttpPost("ResetPassword")]
+		public IActionResult ResetPassword(UserForLoginDto userForSetPassword)
+		{
+			if (_authHelper.SetPassword(userForSetPassword))
+			{
+				return Ok();
+			}
+
+			return StatusCode(400, "Failed to update password.");
 		}
 
 		[AllowAnonymous]
