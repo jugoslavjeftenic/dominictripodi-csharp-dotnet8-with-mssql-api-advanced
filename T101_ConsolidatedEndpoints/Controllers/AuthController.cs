@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using System.Data;
@@ -88,15 +89,19 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		public IActionResult Login(UserForLoginDto userForLogin)
 		{
 			string sqlForHashAndSalt = @$"
-			SELECT 
-				[PasswordHash], 
-				[PasswordSalt] 
-			FROM TutorialAppSchema.Auth 
-			WHERE Email = '{userForLogin.Email}'
+			EXEC TutorialAppSchema.spLoginConfirmation_Get
+			@Email = '{userForLogin.Email}'
 			";
 
+			DynamicParameters sqlParameters = new();
+			sqlParameters.Add("@EmailParam", userForLogin.Email, DbType.String);
+
 			UserForLoginConfirmationDto userForLoginConfirmation =
-				_dapper.LoadDataSingle<UserForLoginConfirmationDto>(sqlForHashAndSalt);
+				_dapper.LoadDataSingleWithParameters<UserForLoginConfirmationDto>
+				(
+					sqlForHashAndSalt,
+					sqlParameters
+				);
 
 
 			byte[] passwordHash =
