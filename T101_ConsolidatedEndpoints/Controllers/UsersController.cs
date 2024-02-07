@@ -12,9 +12,6 @@ namespace T101_ConsolidatedEndpoints.Controllers
 	[Route("[controller]")]
 	public class UsersController(IConfiguration config) : ControllerBase
 	{
-		private readonly string _specifier = "0.00";
-		private readonly CultureInfo _culture = CultureInfo.InvariantCulture;
-
 		private readonly DataContextDapper _dapper = new(config);
 
 		// Get
