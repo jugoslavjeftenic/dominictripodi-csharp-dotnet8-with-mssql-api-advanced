@@ -49,7 +49,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 		// Upsert
 		[HttpPut]
-		public IActionResult UpsertUser(UserModel userComplete)
+		public IActionResult UpsertUser(UserModel user)
 		{
 			string sql = @"
 			EXEC TutorialAppSchema.spUser_Upsert
@@ -64,15 +64,15 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				@UserId = @UserIdParam
 			";
 			DynamicParameters sqlParameters = new();
-			sqlParameters.Add("@FirstNameParam", userComplete.FirstName, DbType.String);
-			sqlParameters.Add("@LastNameParam", userComplete.LastName, DbType.String);
-			sqlParameters.Add("@EmailParam", userComplete.Email, DbType.String);
-			sqlParameters.Add("@GenderParam", userComplete.Gender, DbType.String);
-			sqlParameters.Add("@ActiveParam", userComplete.Active, DbType.Boolean);
-			sqlParameters.Add("@JobTitleParam", userComplete.JobTitle, DbType.String);
-			sqlParameters.Add("@DepartmentParam", userComplete.Department, DbType.String);
-			sqlParameters.Add("@SalaryParam", userComplete.Salary, DbType.Decimal);
-			sqlParameters.Add("@UserIdParam", userComplete.UserId, DbType.Int32);
+			sqlParameters.Add("@FirstNameParam", user.FirstName, DbType.String);
+			sqlParameters.Add("@LastNameParam", user.LastName, DbType.String);
+			sqlParameters.Add("@EmailParam", user.Email, DbType.String);
+			sqlParameters.Add("@GenderParam", user.Gender, DbType.String);
+			sqlParameters.Add("@ActiveParam", user.Active, DbType.Boolean);
+			sqlParameters.Add("@JobTitleParam", user.JobTitle, DbType.String);
+			sqlParameters.Add("@DepartmentParam", user.Department, DbType.String);
+			sqlParameters.Add("@SalaryParam", user.Salary, DbType.Decimal);
+			sqlParameters.Add("@UserIdParam", user.UserId, DbType.Int32);
 
 			if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
 			{
