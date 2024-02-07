@@ -37,7 +37,10 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				sqlParameters.Add("@ActiveParam", isActive, DbType.Boolean);
 			}
 
-			sql += stringParameters[1..];
+			if (stringParameters.Length > 0)
+			{
+				sql += stringParameters[1..];
+			}
 
 			IEnumerable<UserModel> users = _dapper.LoadDataWithParameters<UserModel>(sql, sqlParameters);
 
