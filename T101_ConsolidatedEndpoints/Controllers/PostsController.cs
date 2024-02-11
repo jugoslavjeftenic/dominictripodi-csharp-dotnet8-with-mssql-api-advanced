@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using T101_ConsolidatedEndpoints.Data;
-using T101_ConsolidatedEndpoints.Dtos;
 using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers

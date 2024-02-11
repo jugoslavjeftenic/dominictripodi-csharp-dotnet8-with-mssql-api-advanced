@@ -1,14 +1,11 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Globalization;
-using System.Security.Cryptography;
 using T101_ConsolidatedEndpoints.Data;
 using T101_ConsolidatedEndpoints.Dtos;
 using T101_ConsolidatedEndpoints.Helpers;
-using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers
 {
