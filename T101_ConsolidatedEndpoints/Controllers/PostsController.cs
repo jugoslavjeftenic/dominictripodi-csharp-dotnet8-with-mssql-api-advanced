@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using T101_ConsolidatedEndpoints.Data;
 using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers
 {
-	//[Authorize]
+	[Authorize]
 	[ApiController]
 	[Route("[controller]")]
 	public class PostsController(IConfiguration config) : ControllerBase
@@ -45,10 +46,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		[HttpGet]
 		public IEnumerable<PostModel> GetPostByLoggedUser()
 		{
-			string sql = @$"
-			EXEC TutorialAppSchema.spPosts_Get
-			WHERE [UserId] = {User.FindFirst("userId")?.Value}
-			";
+			string sql = $"EXEC TutorialAppSchema.spPosts_Get @UserId={User.FindFirst("userId")?.Value}";
 
 			return _dapper.LoadData<PostModel>(sql);
 		}
