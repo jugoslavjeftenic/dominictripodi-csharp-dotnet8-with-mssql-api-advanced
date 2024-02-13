@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using AutoMapper;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
@@ -6,6 +7,7 @@ using System.Globalization;
 using T101_ConsolidatedEndpoints.Data;
 using T101_ConsolidatedEndpoints.Dtos;
 using T101_ConsolidatedEndpoints.Helpers;
+using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers
 {
@@ -14,6 +16,11 @@ namespace T101_ConsolidatedEndpoints.Controllers
 	[Route("[controller]")]
 	public class AuthController(IConfiguration config) : ControllerBase
 	{
+		private readonly ReusableSql _reusableSql = new(config);
+		private readonly IMapper _mapper = new Mapper(new MapperConfiguration(cfg =>
+		{
+			cfg.CreateMap<UserForRegistrationDto, UserModel>();
+		}));
 		private readonly DataContextDapper _dapper = new(config);
 		private readonly AuthHelper _authHelper = new(config);
 
@@ -38,22 +45,25 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 					if (_authHelper.SetPassword(userForSetPassword))
 					{
-						string _specifier = "0.00";
-						CultureInfo _culture = CultureInfo.InvariantCulture;
+						UserModel user = _mapper.Map<UserModel>(userForRegistration);
+						user.Active= true;
 
-						string sqlAddUser = @$"
-						EXEC TutorialAppSchema.spUser_Upsert
-							@FirstName = '{userForRegistration.FirstName}',
-							@LastName = '{userForRegistration.LastName}',
-							@Email = '{userForRegistration.Email}',
-							@Gender = '{userForRegistration.Gender}',
-							@Active = 1,
-							@JobTitle = '{userForRegistration.JobTitle}',
-							@Department = '{userForRegistration.Department}',
-							@Salary = {userForRegistration.Salary.ToString(_specifier, _culture)}
-						";
+						//string _specifier = "0.00";
+						//CultureInfo _culture = CultureInfo.InvariantCulture;
 
-						if (_dapper.ExecuteSql(sqlAddUser))
+						//string sqlAddUser = @$"
+						//EXEC TutorialAppSchema.spUser_Upsert
+						//	@FirstName = '{userForRegistration.FirstName}',
+						//	@LastName = '{userForRegistration.LastName}',
+						//	@Email = '{userForRegistration.Email}',
+						//	@Gender = '{userForRegistration.Gender}',
+						//	@Active = 1,
+						//	@JobTitle = '{userForRegistration.JobTitle}',
+						//	@Department = '{userForRegistration.Department}',
+						//	@Salary = {userForRegistration.Salary.ToString(_specifier, _culture)}
+						//";
+
+						if (_reusableSql.UpsertUser(user))
 						{
 							return Ok();
 						}

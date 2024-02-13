@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using T101_ConsolidatedEndpoints.Data;
+using T101_ConsolidatedEndpoints.Helpers;
 using T101_ConsolidatedEndpoints.Models;
 
 namespace T101_ConsolidatedEndpoints.Controllers
@@ -13,6 +14,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 	public class UsersController(IConfiguration config) : ControllerBase
 	{
 		private readonly DataContextDapper _dapper = new(config);
+		private readonly ReusableSql _reusableSql = new(config);
 
 		// Get
 		[HttpGet("{userId}/{isActive}")]
@@ -48,30 +50,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		[HttpPut]
 		public IActionResult UpsertUser(UserModel user)
 		{
-			string sql = @"
-			EXEC TutorialAppSchema.spUser_Upsert
-				@FirstName = @FirstNameParam,
-				@LastName = @LastNameParam,
-				@Email = @EmailParam,
-				@Gender = @GenderParam,
-				@Active = @ActiveParam,
-				@JobTitle = @JobTitleParam,
-				@Department = @DepartmentParam,
-				@Salary = @SalaryParam,
-				@UserId = @UserIdParam
-			";
-			DynamicParameters sqlParameters = new();
-			sqlParameters.Add("@FirstNameParam", user.FirstName, DbType.String);
-			sqlParameters.Add("@LastNameParam", user.LastName, DbType.String);
-			sqlParameters.Add("@EmailParam", user.Email, DbType.String);
-			sqlParameters.Add("@GenderParam", user.Gender, DbType.String);
-			sqlParameters.Add("@ActiveParam", user.Active, DbType.Boolean);
-			sqlParameters.Add("@JobTitleParam", user.JobTitle, DbType.String);
-			sqlParameters.Add("@DepartmentParam", user.Department, DbType.String);
-			sqlParameters.Add("@SalaryParam", user.Salary, DbType.Decimal);
-			sqlParameters.Add("@UserIdParam", user.UserId, DbType.Int32);
-
-			if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
+			if (_reusableSql.UpsertUser(user))
 			{
 				return Ok();
 			}
