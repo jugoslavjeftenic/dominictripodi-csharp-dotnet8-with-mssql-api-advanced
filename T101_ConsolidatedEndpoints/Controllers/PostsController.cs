@@ -75,7 +75,6 @@ namespace T101_ConsolidatedEndpoints.Controllers
 				@PostTitle = @PostTitleParam,
 				@PostContent = @PostContentParam
 			";
-			string stringParameters = "";
 			DynamicParameters sqlParameters = new();
 			sqlParameters.Add("@UserIdParam", User.FindFirst("userId")?.Value, DbType.Int32);
 			sqlParameters.Add("@PostTitleParam", post.PostTitle, DbType.String);
@@ -83,13 +82,8 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 			if (post.PostId > 0)
 			{
-				stringParameters += ", @PostId = @PostIdParam";
+				sql += ", @PostId = @PostIdParam";
 				sqlParameters.Add("@PostIdParam", post.PostId, DbType.Int32);
-			}
-
-			if (stringParameters.Length > 0)
-			{
-				sql += stringParameters[1..];
 			}
 
 			if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
