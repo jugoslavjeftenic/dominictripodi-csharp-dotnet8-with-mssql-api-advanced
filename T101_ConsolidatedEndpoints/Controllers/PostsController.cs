@@ -1,8 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Hosting;
 using System.Data;
 using T101_ConsolidatedEndpoints.Data;
 using T101_ConsolidatedEndpoints.Models;

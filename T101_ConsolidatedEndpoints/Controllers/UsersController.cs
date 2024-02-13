@@ -24,13 +24,13 @@ namespace T101_ConsolidatedEndpoints.Controllers
 
 			if (userId != 0)
 			{
-				stringParameters += ", @UserId=@UserIdParam";
+				stringParameters += ", @UserId = @UserIdParam";
 				sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
 			}
 
 			if (isActive)
 			{
-				stringParameters += ", @Active=@ActiveParam";
+				stringParameters += ", @Active = @ActiveParam";
 				sqlParameters.Add("@ActiveParam", isActive, DbType.Boolean);
 			}
 
@@ -83,7 +83,7 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		[HttpDelete("{userId}")]
 		public IActionResult DeleteUser(int userId)
 		{
-			string sql = $"EXEC TutorialAppSchema.spUser_Delete @UserId=@UserIdParam";
+			string sql = $"EXEC TutorialAppSchema.spUser_Delete @UserId = @UserIdParam";
 			DynamicParameters sqlParameters = new();
 			sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
 
