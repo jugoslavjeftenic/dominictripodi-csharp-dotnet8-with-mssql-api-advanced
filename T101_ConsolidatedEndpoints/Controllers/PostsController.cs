@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
+using System.Data;
 using T101_ConsolidatedEndpoints.Data;
 using T101_ConsolidatedEndpoints.Models;
 
@@ -17,38 +21,48 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		public IEnumerable<PostModel> GetPost(int postId = 0, int userId = 0, string searchParam = "none")
 		{
 			string sql = "EXEC TutorialAppSchema.spPosts_Get";
-			string parameters = "";
+			string stringParameters = "";
+			DynamicParameters sqlParameters = new();
 
 			if (postId != 0)
 			{
-				parameters += $", @PostId={postId}";
+				stringParameters += ", @PostId = @PostIdParam";
+				sqlParameters.Add("@PostIdParam", postId, DbType.Int32);
 			}
 
 			if (userId != 0)
 			{
-				parameters += $", @UserId={userId}";
+				stringParameters += ", @UserId = @UserIdParam";
+				sqlParameters.Add("@UserIdParam", userId, DbType.Int32);
 			}
 
 			if (searchParam != "none")
 			{
-				parameters += $", @SearchValue='{searchParam}'";
+				stringParameters += ", @SearchValue = @SearchValueParam";
+				sqlParameters.Add("@SearchValueParam", searchParam, DbType.String);
 			}
 
-			if (parameters.Length > 0)
+			if (stringParameters.Length > 0)
 			{
-				sql += parameters[1..];
+				sql += stringParameters[1..];
 			}
 
-			return _dapper.LoadData<PostModel>(sql);
+			IEnumerable<PostModel> posts = _dapper.LoadDataWithParameters<PostModel>(sql, sqlParameters);
+
+			return posts;
 		}
 
 		// Get - byLoggedUser
 		[HttpGet]
 		public IEnumerable<PostModel> GetPostByLoggedUser()
 		{
-			string sql = $"EXEC TutorialAppSchema.spPosts_Get @UserId={User.FindFirst("userId")?.Value}";
+			string sql = $"EXEC TutorialAppSchema.spPosts_Get @UserId = @UserIdParam";
+			DynamicParameters sqlParameters = new();
+			sqlParameters.Add("@UserIdParam", User.FindFirst("userId")?.Value, DbType.Int32);
 
-			return _dapper.LoadData<PostModel>(sql);
+			IEnumerable<PostModel> posts = _dapper.LoadDataWithParameters<PostModel>(sql, sqlParameters);
+
+			return posts;
 		}
 
 		// Upsert
@@ -57,17 +71,28 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		{
 			string sql = @$"
 			EXEC TutorialAppSchema.spPosts_Upsert
-				@UserId = {User.FindFirst("userId")?.Value},
-				@PostTitle = '{post.PostTitle}',
-				@PostContent = '{post.PostContent}'
+				@UserId = @UserIdParam,
+				@PostTitle = @PostTitleParam,
+				@PostContent = @PostContentParam
 			";
+			string stringParameters = "";
+			DynamicParameters sqlParameters = new();
+			sqlParameters.Add("@UserIdParam", User.FindFirst("userId")?.Value, DbType.Int32);
+			sqlParameters.Add("@PostTitleParam", post.PostTitle, DbType.String);
+			sqlParameters.Add("@PostContentParam", post.PostContent, DbType.String);
 
 			if (post.PostId > 0)
 			{
-				sql += $", @PostId = {post.PostId}";
+				stringParameters += ", @PostId = @PostIdParam";
+				sqlParameters.Add("@PostIdParam", post.PostId, DbType.Int32);
 			}
 
-			if (_dapper.ExecuteSql(sql))
+			if (stringParameters.Length > 0)
+			{
+				sql += stringParameters[1..];
+			}
+
+			if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
 			{
 				return Ok();
 			}
@@ -81,11 +106,14 @@ namespace T101_ConsolidatedEndpoints.Controllers
 		{
 			string sql = @$"
 			EXEC TutorialAppSchema.spPost_Delete
-				@PostId = {postId},
-				@UserId = {User.FindFirst("userId")?.Value}
+				@PostId = @PostIdParam,
+				@UserId = @UserIdParam
 			";
+			DynamicParameters sqlParameters = new();
+			sqlParameters.Add("@PostIdParam", postId, DbType.Int32);
+			sqlParameters.Add("@UserIdParam", User.FindFirst("userId")?.Value, DbType.Int32);
 
-			if (_dapper.ExecuteSql(sql))
+			if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
 			{
 				return Ok();
 			}
